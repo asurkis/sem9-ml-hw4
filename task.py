@@ -27,9 +27,11 @@ class Perceptron:
         
         """
 
+        self.iterations = iterations
         self.w = None
     
-    def fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
+    
+    def fit(self, X: np.ndarray, y: np.ndarray):
         """
         Обучает простой перцептрон. 
         Для этого сначала инициализирует веса перцептрона,
@@ -43,8 +45,22 @@ class Perceptron:
             Набор меток классов для данных.
         
         """
-        pass
-            
+        y = 2 * y - 1
+        self.w = np.ones(X.shape[1] + 1)
+        
+        for _ in range(self.iterations):
+            pred = self._predict(X)
+            for i in range(y.shape[0]):
+                if y[i] != pred[i]:
+                    self.w[0] += y[i]
+                    self.w[1:] += y[i] * X[i, :]
+    
+    
+    def _predict(self, X: np.ndarray) -> np.ndarray:
+        real = self.w[0] + X @ self.w[1:].T
+        return np.sign(real, casting='unsafe', dtype=np.int64)
+    
+    
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Предсказывает метки классов.
@@ -61,8 +77,8 @@ class Perceptron:
             (по одной метке для каждого элемента из X).
         
         """
-        pass
-    
+        return (self._predict(X) + 1) // 2
+
 # Task 2
 
 class PerceptronBest:
