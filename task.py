@@ -46,14 +46,13 @@ class Perceptron:
         
         """
         y = 2 * y - 1
+        Xh = np.hstack((np.tile(1, (X.shape[0], 1)), X))
         self.w = np.ones(X.shape[1] + 1)
         
         for _ in range(self.iterations):
-            pred = self._predict(X)
-            for i in range(y.shape[0]):
-                if y[i] != pred[i]:
-                    self.w[0] += y[i]
-                    self.w[1:] += y[i] * X[i, :]
+            pred = np.sign(Xh @ self.w.T)
+            neq = y != pred
+            self.w[:] += np.sum(y[neq].reshape((-1, 1)) * Xh[neq, :], axis=0)
     
     
     def _predict(self, X: np.ndarray) -> np.ndarray:
