@@ -31,6 +31,18 @@ class Perceptron:
         self.w = None
     
     
+    def _fit_step(self, X: np.ndarray, y: np.ndarray):
+        pred = np.sign(X @ self.w.T)
+        neq = y != pred
+        self.w[:] += np.sum(y[neq].reshape((-1, 1)) * X[neq, :], axis=0)
+    
+    
+    def _fit(self, X: np.ndarray, y: np.ndarray):
+        self.w = np.zeros(X.shape[1])
+        for _ in range(self.iterations):
+            self._fit_step(X, y)
+    
+    
     def fit(self, X: np.ndarray, y: np.ndarray):
         """
         Обучает простой перцептрон. 
@@ -45,14 +57,9 @@ class Perceptron:
             Набор меток классов для данных.
         
         """
-        y = 2 * y - 1
+        yh = 2 * y - 1
         Xh = np.hstack((np.tile(1, (X.shape[0], 1)), X))
-        self.w = np.ones(X.shape[1] + 1)
-        
-        for _ in range(self.iterations):
-            pred = np.sign(Xh @ self.w.T)
-            neq = y != pred
-            self.w[:] += np.sum(y[neq].reshape((-1, 1)) * Xh[neq, :], axis=0)
+        self._fit(Xh, yh)
     
     
     def _predict(self, X: np.ndarray) -> np.ndarray:
@@ -80,67 +87,28 @@ class Perceptron:
 
 # Task 2
 
-class PerceptronBest:
-
+class PerceptronBest(Perceptron):
     def __init__(self, iterations: int = 100):
-        """
-        Parameters
-        ----------
-        iterations : int
-        Количество итераций обучения перцептрона.
-
-        Attributes
-        ----------
-        w : np.ndarray
-        Веса перцептрона размерности X.shape[1] + 1 (X --- данные для обучения), 
-        w[0] должен соответстовать константе, 
-        w[1:] - коэффициентам компонент элемента X.
-
-        Notes
-        -----
-        Вы можете добавлять свои поля в класс.
-        
-        """
-
-        self.w = None
+        super().__init__(iterations)
     
-    def fit(self, X: np.ndarray, y: np.ndarray) -> NoReturn:
-        """
-        Обучает перцептрон.
+    
+    def _fit_step(self, X: np.ndarray, y: np.ndarray):
+        pred = np.sign(X @ self.w.T)
+        neq = y != pred
 
-        Для этого сначала инициализирует веса перцептрона, 
-        а затем обновляет их в течении iterations итераций.
-
-        При этом в конце обучения оставляет веса, 
-        при которых значение accuracy было наибольшим.
+        neq_sum = np.sum(neq)
+        if neq_sum < self.best_neq:
+            self.w_best = np.copy(self.w)
+            self.best_neq = neq_sum
         
-        Parameters
-        ----------
-        X : np.ndarray
-            Набор данных, на котором обучается перцептрон.
-        y: np.ndarray
-            Набор меток классов для данных.
-        
-        """
-        pass
-            
-    def predict(self, X: np.ndarray) -> np.ndarray:
-        """
-        Предсказывает метки классов.
-        
-        Parameters
-        ----------
-        X : np.ndarray
-            Набор данных, для которого необходимо вернуть метки классов.
-        
-        Return
-        ------
-        labels : np.ndarray
-            Вектор индексов классов 
-            (по одной метке для каждого элемента из X).
-        
-        """
-        pass
+        self.w[:] += np.sum(y[neq].reshape((-1, 1)) * X[neq, :], axis=0)
+    
+    
+    def _fit(self, X: np.ndarray, y: np.ndarray):
+        self.w_best = None
+        self.best_neq = y.shape[0]
+        super()._fit(X, y)
+        self.w = self.w_best
     
 # Task 3
 
