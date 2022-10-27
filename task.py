@@ -83,89 +83,30 @@ class Perceptron:
 
 # Task 2
 
-class PerceptronBest:
-
+class PerceptronBest(Perceptron):
     def __init__(self, iterations: int = 100):
-        """
-        Parameters
-        ----------
-        iterations : int
-        Количество итераций обучения перцептрона.
-
-        Attributes
-        ----------
-        w : np.ndarray
-        Веса перцептрона размерности X.shape[1] + 1 (X --- данные для обучения), 
-        w[0] должен соответстовать константе, 
-        w[1:] - коэффициентам компонент элемента X.
-
-        Notes
-        -----
-        Вы можете добавлять свои поля в класс.
-        
-        """
-
-        self.iterations = iterations
-        self.w = None
+        super().__init__(iterations)
+        self.w_best = None
+        self.neq_best = None
     
     
-    def fit(self, X: np.ndarray, y: np.ndarray):
-        """
-        Обучает перцептрон.
-
-        Для этого сначала инициализирует веса перцептрона, 
-        а затем обновляет их в течении iterations итераций.
-
-        При этом в конце обучения оставляет веса, 
-        при которых значение accuracy было наибольшим.
+    def _fit_step(self, X: np.ndarray, y: np.ndarray):
+        pred = np.sign(X @ self.w.T)
+        neq = y != pred
         
-        Parameters
-        ----------
-        X : np.ndarray
-            Набор данных, на котором обучается перцептрон.
-        y: np.ndarray
-            Набор меток классов для данных.
+        neq_sum = neq.sum()
+        if neq_sum < self.neq_best:
+            self.w_best[:] = self.w[:]
+            self.neq_best = neq_sum
         
-        """
-        yh = 2 * y - 1
-        Xh = np.hstack((np.tile(1, (X.shape[0], 1)), X))
-        self.w = np.zeros(Xh.shape[1])
-        
-        w_best = None
-        neq_best = yh.shape[0] + 1
-        
-        for _ in range(self.iterations):
-            pred = np.sign(Xh @ self.w.T)
-            neq = yh != pred
-            
-            neq_sum = neq.sum()
-            if neq_sum < neq_best:
-                w_best = np.copy(self.w)
-                neq_best = neq_sum
-            
-            self.w[:] += np.sum(yh[neq].reshape((-1, 1)) * Xh[neq, :], axis=0)
-        
-        self.w = w_best
+        self.w += y[neq] @ X[neq, :]
     
     
-    def predict(self, X: np.ndarray) -> np.ndarray:
-        """
-        Предсказывает метки классов.
-        
-        Parameters
-        ----------
-        X : np.ndarray
-            Набор данных, для которого необходимо вернуть метки классов.
-        
-        Return
-        ------
-        labels : np.ndarray
-            Вектор индексов классов 
-            (по одной метке для каждого элемента из X).
-        
-        """
-        real = self.w[0] + X @ self.w[1:].T
-        return (np.sign(real) + 1) // 2
+    def _fit(self, X: np.ndarray, y: np.ndarray):
+        self.w_best = np.empty(X.shape[1])
+        self.neq_best = y.shape[0] + 1
+        super()._fit(X, y)
+        self.w = self.w_best
     
 # Task 3
 
