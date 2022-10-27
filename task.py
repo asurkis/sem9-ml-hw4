@@ -34,7 +34,7 @@ class Perceptron:
     def _fit_step(self, X: np.ndarray, y: np.ndarray):
         pred = np.sign(X @ self.w.T)
         neq = y != pred
-        self.w[:] += np.sum(y[neq].reshape((-1, 1)) * X[neq, :], axis=0)
+        self.w += y[neq] @ X[neq, :]
     
     
     def _fit(self, X: np.ndarray, y: np.ndarray):
@@ -62,11 +62,6 @@ class Perceptron:
         self._fit(Xh, yh)
     
     
-    def _predict(self, X: np.ndarray) -> np.ndarray:
-        real = self.w[0] + X @ self.w[1:].T
-        return np.sign(real, casting='unsafe', dtype=np.int64)
-    
-    
     def predict(self, X: np.ndarray) -> np.ndarray:
         """
         Предсказывает метки классов.
@@ -83,7 +78,8 @@ class Perceptron:
             (по одной метке для каждого элемента из X).
         
         """
-        return (self._predict(X) + 1) // 2
+        real = self.w[0] + X @ self.w[1:].T
+        return (np.sign(real) + 1) // 2
 
 # Task 2
 
