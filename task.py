@@ -126,4 +126,10 @@ def transform_images(images: np.ndarray) -> np.ndarray:
         Двумерная матрица с преобразованными изображениями.
         Её размерность: (n_images, 2).
     """
-    return np.zeros((images.shape[0], 2))
+    
+    # Возьмём сумму вертикального и горизонтального центров,
+    # этого должно хватить
+    _, ih, iw = images.shape
+    sv = images[:, : ih // 4, :].mean(axis=(1, 2))
+    sh = images[:, ih // 4 : 3 * ih // 4, :].mean(axis=(1, 2))
+    return np.stack((sv, sh)).T
