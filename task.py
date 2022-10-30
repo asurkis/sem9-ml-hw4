@@ -29,6 +29,8 @@ class Perceptron:
 
         self.iterations = iterations
         self.w = None
+        self.ymin = None
+        self.ymax = None
     
     
     def _fit_step(self, X: np.ndarray, y: np.ndarray):
@@ -57,7 +59,9 @@ class Perceptron:
             Набор меток классов для данных.
         
         """
-        yh = 2 * y - 1
+        self.ymin = y.min()
+        self.ymax = y.max()
+        yh = (y != self.ymin) * 2 - 1
         Xh = np.hstack((np.tile(1, (X.shape[0], 1)), X))
         self._fit(Xh, yh)
     
@@ -79,7 +83,7 @@ class Perceptron:
         
         """
         real = self.w[0] + X @ self.w[1:].T
-        return (np.sign(real) + 1) // 2
+        return (np.sign(real) + 1) // 2 * (self.ymax - self.ymin) + self.ymin
 
 # Task 2
 
@@ -130,6 +134,6 @@ def transform_images(images: np.ndarray) -> np.ndarray:
     # Возьмём сумму вертикального и горизонтального центров,
     # этого должно хватить
     _, ih, iw = images.shape
-    sv = images[:, : ih // 4, :].mean(axis=(1, 2))
-    sh = images[:, ih // 4 : 3 * ih // 4, :].mean(axis=(1, 2))
+    sv = images[:, : ih // 8, :].mean(axis=(1, 2))
+    sh = images[:, 4 * ih // 8 : 6 * ih // 8, :].mean(axis=(1, 2))
     return np.stack((sv, sh)).T
